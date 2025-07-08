@@ -15,7 +15,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/YaminDeveloper/Pin-Verification.git"
+    "url": "git+https://github.com/Animohub-vip/Pin-Verification.git"
   },
   "keywords": [
     "netlify",
@@ -24,7 +24,7 @@
     "pin-verification"
   ],
   "bugs": {
-    "url": "https://github.com/YaminDeveloper/Pin-Verification/issues"
+    "url": "https://github.com/Animohub-vip/Pin-Verification/issues"
   },
-  "homepage": "https://github.com/YaminDeveloper/Pin-Verification#readme"
+  "homepage": "https://github.com/Animohub-vip/Pin-Verification#readme"
 }
