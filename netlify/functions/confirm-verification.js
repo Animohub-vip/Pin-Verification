@@ -3,7 +3,7 @@ const admin = require('firebase-admin');
 const fetch = require('node-fetch');
 
 // রিমোট কনফিগারেশন ফাইলের URL
-const CONFIG_URL = "https://raw.githubusercontent.com/YaminDeveloper/Pin-VerificationConfig/refs/heads/main/config.json";
+const CONFIG_URL = "https://raw.githubusercontent.com/Animohub-vip/ConfigData/refs/heads/main/config.json";
 
 // Firebase Admin SDK ইনিশিয়ালাইজেশন (সবচেয়ে নিরাপদ পদ্ধতি ব্যবহার করে)
 try {
