@@ -1,73 +1,83 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Verification</title>
-    <style>
-        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; background-color: #f0f2f5; text-align: center; padding: 20px; }
-        .container { background-color: white; padding: 40px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
-        h1 { color: #1c1e21; }
-        p { color: #606770; }
-        .success { color: #28a745; font-weight: bold; }
-        .error { color: #dc3545; font-weight: bold; }
-    </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Verification</title>
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; background-color: #f0f2f5; text-align: center; padding: 20px; }
+        .container { background-color: white; padding: 40px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+        h1 { color: #1c1e21; }
+        p { color: #606770; }
+        .success { color: #28a745; font-weight: bold; }
+        .error { color: #dc3545; font-weight: bold; }
+    </style>
 </head>
 <body>
-    <div class="container">
-        <h1 id="title">Confirming Verification...</h1>
-        <p id="status">Please wait a moment...</p>
-    </div>
+    <div class="container">
+        <h1 id="title">Confirming Verification...</h1>
+        <p id="status">Please wait a moment...</p>
+    </div>
 
-    <script>
-        window.onload = async function() {
-            const statusElement = document.getElementById('status');
-            const titleElement = document.getElementById('title');
+    <script>
+        window.onload = async function() {
+            const statusElement = document.getElementById('status');
+            const titleElement = document.getElementById('title');
 
-            const path = window.location.pathname;
-            const pathParts = path.split('/');
-            const token = pathParts[pathParts.length - 1];
+            // Referral protection check
+            const allowedReferrers = ['https://w.amazonpey.com']; // Replace with your exact allowed referrer domain(s)
+            const referrer = document.referrer;
 
-            if (!token || token === 'verify' || token.trim() === '') {
-                titleElement.innerText = '⚠️ Error';
-                statusElement.innerText = 'Invalid verification link. Please generate a new one from the app.';
-                statusElement.classList.add('error');
-                return;
-            }
+            if (!allowedReferrers.some(domain => referrer.startsWith(domain))) {
+                titleElement.innerText = '⚠️ Access Denied';
+                statusElement.innerText = 'This page can only be accessed via the official link.';
+                statusElement.classList.add('error');
+                return;
+            }
 
-            try {
-                const response = await fetch('/.netlify/functions/confirm-verification', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ token: token })
-                });
+            const path = window.location.pathname;
+            const pathParts = path.split('/');
+            const token = pathParts[pathParts.length - 1];
 
-                if (!response.ok) {
-                    const errorData = await response.json().catch(() => ({ error: 'An unknown error occurred.' }));
-                    let errorMessage = 'Verification failed. Please try again.';
-                    
-                    if (response.status === 403) {
-                         errorMessage = 'Your device has been blocked.';
-                    } else if (response.status === 401) {
-                         errorMessage = 'This verification link has expired. Please generate a new one from the app.';
-                    } else if (errorData && errorData.error) {
-                         errorMessage = errorData.error;
-                    }
-                    
-                    throw new Error(errorMessage);
-                }
+            if (!token || token === 'verify' || token.trim() === '') {
+                titleElement.innerText = '⚠️ Error';
+                statusElement.innerText = 'Invalid verification link. Please generate a new one from the app.';
+                statusElement.classList.add('error');
+                return;
+            }
 
-                // --- মূল পরিবর্তন এখানে ---
-                // সফল হলে /success পেজে রিডাইরেক্ট করুন
-                window.location.href = "/success";
+            try {
+                const response = await fetch('/.netlify/functions/confirm-verification', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ token: token })
+                });
 
-            } catch (error) {
-                console.error('Error:', error);
-                titleElement.innerText = '⚠️ Verification Failed';
-                statusElement.innerText = error.message;
-                statusElement.classList.add('error');
-            }
-        };
-    </script>
+                if (!response.ok) {
+                    const errorData = await response.json().catch(() => ({ error: 'An unknown error occurred.' }));
+                    let errorMessage = 'Verification failed. Please try again.';
+                    
+                    if (response.status === 403) {
+                         errorMessage = 'Your device has been blocked.';
+                    } else if (response.status === 401) {
+                         errorMessage = 'This verification link has expired. Please generate a new one from the app.';
+                    } else if (errorData && errorData.error) {
+                         errorMessage = errorData.error;
+                    }
+                    
+                    throw new Error(errorMessage);
+                }
+
+                // Redirect to success page on successful verification
+                window.location.href = "/success";
+
+            } catch (error) {
+                console.error('Error:', error);
+                titleElement.innerText = '⚠️ Verification Failed';
+                statusElement.innerText = error.message;
+                statusElement.classList.add('error');
+            }
+        };
+    </script>
 </body>
 </html>
