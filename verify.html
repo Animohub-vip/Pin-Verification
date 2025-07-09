@@ -30,7 +30,7 @@
 
             if (!allowedReferrers.some(domain => referrer.startsWith(domain))) {
                 titleElement.innerText = '⚠️ Access Denied';
-                statusElement.innerText = 'This page can only be accessed via the official link.';
+                statusElement.innerText = 'This page can only be accessed via the official App.';
                 statusElement.classList.add('error');
                 return;
             }
