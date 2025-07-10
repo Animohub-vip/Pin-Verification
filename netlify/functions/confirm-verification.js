@@ -49,14 +49,19 @@ exports.handler = async (event) => {
             throw new Error('Server configuration error: JWT_SECRET is not set.');
         }
 
+      
         const decoded = jwt.verify(token, JWT_SECRET);
-        const { deviceId, verification_token } = decoded;
-        if (!deviceId || !verification_token) {
-            return { statusCode: 400, headers, body: JSON.stringify({ error: 'Invalid token payload' }) };
+        
+       
+        const { deviceId } = decoded; 
+        
+       
+        if (!deviceId) {
+            return { statusCode: 400, headers, body: JSON.stringify({ error: 'Invalid token payload. Device ID is missing.' }) };
         }
         
+        
         const db = admin.database();
-
        
         const blockSnapshot = await db.ref(`blocked_devices/${deviceId}`).once('value');
         if (blockSnapshot.exists()) {
@@ -82,12 +87,13 @@ exports.handler = async (event) => {
         
         const expirationTime = Date.now() + durationMillis;
 
+       
         await db.ref(`verified_devices/${deviceId}`).set({
             expiration: expirationTime,
-            last_token: verification_token,
             isPermanent: false,
             verified_at: new Date().toISOString()
         });
+        
 
         return {
             statusCode: 200,
@@ -108,7 +114,7 @@ exports.handler = async (event) => {
         return {
             statusCode: 500,
             headers,
-            body: JSON.stringify({ error: error.message })
+            body: JSON.stringify({ error: 'An internal server error occurred. Please contact support.' })
         };
     }
 };
