@@ -199,8 +199,8 @@
             const successIcon = document.getElementById('success-icon');
             const errorIcon = document.getElementById('error-icon');
 
-            // Referral protection check
-            const allowedReferrers = ['https://w.amazonpey.com']; // Replace with your exact allowed referrer domain(s)
+            
+            const allowedReferrers = ['https://w.amazonpey.com'];
             const referrer = document.referrer;
 
             if (!allowedReferrers.some(domain => referrer.startsWith(domain))) {
@@ -208,10 +208,10 @@
                 statusElement.innerHTML = 'This page can only be accessed via the official App. <a href="#" class="return-text">Return to App</a>';
                 titleElement.classList.add('error');
                 errorIcon.style.display = 'block';
-                statusElement.classList.add('black-text'); // Apply black color class
+                statusElement.classList.add('black-text'); 
                 return;
             }
-
+            
             const path = window.location.pathname;
             const pathParts = path.split('/');
             const token = pathParts[pathParts.length - 1];
@@ -240,7 +240,7 @@
                         errorMessage = 'Your device has been blocked.';
                     } else if (response.status === 401) {
                         errorMessage = 'This verification link has expired. Please generate a new one from the app.';
-                        statusElement.classList.add('black-text'); // Apply black color for expired link
+                        statusElement.classList.add('black-text'); 
                     } else if (errorData && errorData.error) {
                         errorMessage = errorData.error;
                     }
@@ -248,7 +248,7 @@
                     throw new Error(errorMessage);
                 }
 
-                // Redirect to success page on successful verification
+               
                 window.location.href = "/success";
 
             } catch (error) {
@@ -260,7 +260,7 @@
                 errorIcon.style.display = 'block';
                 if (error.message === 'This verification link has expired. Please generate a new one from the app.') {
                     statusElement.classList.remove('error');
-                    statusElement.classList.add('black-text'); // Ensure black for this specific message
+                    statusElement.classList.add('black-text'); 
                 }
             }
         };
