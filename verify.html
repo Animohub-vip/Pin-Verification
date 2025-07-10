@@ -85,6 +85,11 @@
             font-weight: 500;
         }
 
+        /* Custom black text for specific messages */
+        .black-text {
+            color: #000000 !important; /* Black color for specific message */
+        }
+
         /* Return text styles */
         .return-text {
             display: inline-block;
@@ -200,11 +205,10 @@
 
             if (!allowedReferrers.some(domain => referrer.startsWith(domain))) {
                 titleElement.innerText = 'Access Denied';
-                statusElement.innerText = 'This page can only be accessed via the official App.';
+                statusElement.innerHTML = 'This page can only be accessed via the official App. <a href="#" class="return-text">Return to App</a>';
                 titleElement.classList.add('error');
-                statusElement.classList.add('error');
                 errorIcon.style.display = 'block';
-                statusElement.innerHTML = 'This page can only be accessed via the official App. <a href="#" class="return-text">Go Back to App</a>';
+                statusElement.classList.add('black-text'); // Apply black color class
                 return;
             }
 
@@ -214,11 +218,10 @@
 
             if (!token || token === 'verify' || token.trim() === '') {
                 titleElement.innerText = 'Error';
-                statusElement.innerText = 'Invalid verification link. Please generate a new one from the app.';
+                statusElement.innerHTML = 'Invalid verification link. <a href="#" class="return-text">Return to App</a>';
                 titleElement.classList.add('error');
                 statusElement.classList.add('error');
                 errorIcon.style.display = 'block';
-                statusElement.innerHTML = 'Invalid verification link. <a href="#" class="return-text">Return to App</a>';
                 return;
             }
 
@@ -237,6 +240,7 @@
                         errorMessage = 'Your device has been blocked.';
                     } else if (response.status === 401) {
                         errorMessage = 'This verification link has expired. Please generate a new one from the app.';
+                        statusElement.classList.add('black-text'); // Apply black color for expired link
                     } else if (errorData && errorData.error) {
                         errorMessage = errorData.error;
                     }
@@ -250,11 +254,14 @@
             } catch (error) {
                 console.error('Error:', error);
                 titleElement.innerText = 'Verification Failed';
-                statusElement.innerText = error.message;
+                statusElement.innerHTML = `${error.message} <a href="#" class="return-text">Return to App</a>`;
                 titleElement.classList.add('error');
                 statusElement.classList.add('error');
                 errorIcon.style.display = 'block';
-                statusElement.innerHTML = `${error.message} <a href="#" class="return-text">Return to App</a>`;
+                if (error.message === 'This verification link has expired. Please generate a new one from the app.') {
+                    statusElement.classList.remove('error');
+                    statusElement.classList.add('black-text'); // Ensure black for this specific message
+                }
             }
         };
     </script>
