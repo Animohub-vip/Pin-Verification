@@ -1,62 +1,120 @@
-const { MongoClient } = require('mongodb');
+const jwt = require('jsonwebtoken');
+const admin = require('firebase-admin');
+const fetch = require('node-fetch');
 
-const MONGO_URI = "mongodb://animohub:animohub@193.203.162.186:27017/admin";
-const DB_NAME = "admin"; // change if your data is under another db
+const CONFIG_URL = "https://animohubapk.com/api/config.json";
 
-exports.handler = async function(event, context) {
-  console.log("Starting cleanup of expired devices...");
-
-  const client = new MongoClient(MONGO_URI);
-
-  try {
-    await client.connect();
-    const db = client.db(DB_NAME);
-    const collection = db.collection('verified_devices');
-
-    const now = Date.now();
-    let deletedCount = 0;
-
-    // Fetch all devices
-    const devices = await collection.find({}).toArray();
-
-    if (!devices || devices.length === 0) {
-      console.log("No devices found in 'verified_devices'. Cleanup not needed.");
-      return {
-        statusCode: 200,
-        body: "No devices to clean up."
-      };
+try {
+    const serviceAccountJson = Buffer.from(process.env.FIREBASE_SERVICE_ACCOUNT_BASE64, 'base64').toString('utf8');
+    const serviceAccount = JSON.parse(serviceAccountJson);
+    
+    if (!admin.apps.length) {
+        admin.initializeApp({
+            credential: admin.credential.cert(serviceAccount),
+            databaseURL: process.env.FIREBASE_DB_URL
+        });
     }
+} catch (e) {
+    console.error('Firebase Admin Initialization Error:', e);
+}
 
-    // Find expired devices
-    const expiredDeviceIds = devices
-      .filter(device => device.expiration && device.expiration < now)
-      .map(device => device.deviceId);
-
-    if (expiredDeviceIds.length > 0) {
-      // Delete expired devices
-      const result = await collection.deleteMany({ deviceId: { $in: expiredDeviceIds } });
-      deletedCount = result.deletedCount;
-
-      console.log(`Successfully deleted ${deletedCount} expired device(s).`);
-      return {
-        statusCode: 200,
-        body: `Successfully deleted ${deletedCount} expired device(s).`
-      };
-    } else {
-      console.log("No expired devices found to delete.");
-      return {
-        statusCode: 200,
-        body: "No expired devices found."
-      };
-    }
-
-  } catch (error) {
-    console.error("Error during database cleanup:", error);
-    return {
-      statusCode: 500,
-      body: JSON.stringify({ error: 'Failed to clean up database.' })
+exports.handler = async (event) => {
+   
+    const headers = {
+        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Headers': 'Content-Type',
+        'Access-Control-Allow-Methods': 'POST, OPTIONS'
     };
-  } finally {
-    await client.close();
-  }
+    if (event.httpMethod === 'OPTIONS') {
+        return { statusCode: 204, headers, body: '' };
+    }
+    if (event.httpMethod !== 'POST') {
+        return { statusCode: 405, headers, body: 'Method Not Allowed' };
+    }
+
+    try {
+       
+        const configResponse = await fetch(CONFIG_URL);
+        if (!configResponse.ok) throw new Error('Failed to fetch remote config');
+        const config = await configResponse.json();
+
+       
+        const { token } = JSON.parse(event.body);
+        if (!token) {
+            return { statusCode: 400, headers, body: JSON.stringify({ error: 'Token is required' }) };
+        }
+
+        const JWT_SECRET = process.env.JWT_SECRET;
+        if (!JWT_SECRET) {
+            throw new Error('Server configuration error: JWT_SECRET is not set.');
+        }
+
+      
+        const decoded = jwt.verify(token, JWT_SECRET);
+        
+       
+        const { deviceId } = decoded; 
+        
+       
+        if (!deviceId) {
+            return { statusCode: 400, headers, body: JSON.stringify({ error: 'Invalid token payload. Device ID is missing.' }) };
+        }
+        
+        
+        const db = admin.database();
+       
+        const blockSnapshot = await db.ref(`blocked_devices/${deviceId}`).once('value');
+        if (blockSnapshot.exists()) {
+            console.log(`Verification blocked for device: ${deviceId}`);
+            return {
+                statusCode: 403, 
+                body: JSON.stringify({ error: 'This device has been blocked.' })
+            };
+        }
+
+       
+        const verificationConfig = config.verification || {};
+        const useHours = verificationConfig.useHours === true;
+        let durationMillis;
+
+        if (useHours) {
+            const durationHours = verificationConfig.durationHours || 48;
+            durationMillis = durationHours * 60 * 60 * 1000;
+        } else {
+            const durationMinutes = verificationConfig.durationMinutes || 60;
+            durationMillis = durationMinutes * 60 * 1000;
+        }
+        
+        const expirationTime = Date.now() + durationMillis;
+
+       
+        await db.ref(`verified_devices/${deviceId}`).set({
+            expiration: expirationTime,
+            isPermanent: false,
+            verified_at: new Date().toISOString()
+        });
+        
+
+        return {
+            statusCode: 200,
+            headers,
+            body: JSON.stringify({ message: `Successfully verified device: ${deviceId}` })
+        };
+
+    } catch (error) {
+       
+        if (error.name === 'JsonWebTokenError' || error.name === 'TokenExpiredError') {
+            return { 
+                statusCode: 401, 
+                body: JSON.stringify({ error: 'Invalid or expired token.' }) 
+            };
+        }
+        
+        console.error('Function Error:', error);
+        return {
+            statusCode: 500,
+            headers,
+            body: JSON.stringify({ error: 'An internal server error occurred. Please contact support.' })
+        };
+    }
 };
