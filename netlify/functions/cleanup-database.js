@@ -1,75 +1,62 @@
-const admin = require('firebase-admin');
+const { MongoClient } = require('mongodb');
 
-// Firebase Admin SDK ইনিশিয়ালাইজেশন (যদি আগে না করা থাকে)
-try {
-    const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT_KEY);
-    const databaseURL = process.env.FIREBASE_DATABASE_URL;
-
-    if (admin.apps.length === 0) {
-        admin.initializeApp({
-            credential: admin.credential.cert(serviceAccount),
-            databaseURL: databaseURL
-        });
-    }
-} catch (e) {
-    console.error('Firebase Admin SDK initialization failed:', e);
-}
+const MONGO_URI = "mongodb://animohub:animohub@193.203.162.186:27017/admin";
+const DB_NAME = "admin"; // change if your data is under another db
 
 exports.handler = async function(event, context) {
-    console.log("Starting cleanup of expired devices...");
+  console.log("Starting cleanup of expired devices...");
 
-    try {
-        const db = admin.database();
-        const ref = db.ref('verified_devices');
-        const now = Date.now();
-        let deletedCount = 0;
+  const client = new MongoClient(MONGO_URI);
 
-        // সকল ভেরিফাইড ডিভাইসের ডেটা একবার আনা হচ্ছে
-        const snapshot = await ref.once('value');
-        const devices = snapshot.val();
+  try {
+    await client.connect();
+    const db = client.db(DB_NAME);
+    const collection = db.collection('verified_devices');
 
-        if (!devices) {
-            console.log("No devices found in 'verified_devices'. Cleanup not needed.");
-            return {
-                statusCode: 200,
-                body: "No devices to clean up."
-            };
-        }
+    const now = Date.now();
+    let deletedCount = 0;
 
-        const updates = {};
-        for (const deviceId in devices) {
-            const deviceData = devices[deviceId];
-            // নিশ্চিত করুন যে 'expiration' ফিল্ডটি বিদ্যমান
-            if (deviceData.expiration && deviceData.expiration < now) {
-                // সরাসরি ডিলিট না করে, একটি আপডেটে 'null' হিসেবে সেট করা হচ্ছে
-                // এটি একটি অ্যাটমিক অপারেশনে সব ডিলিট সম্পন্ন করে
-                updates[deviceId] = null;
-                deletedCount++;
-                console.log(`Marking device ${deviceId} for deletion. Expired at: ${new Date(deviceData.expiration).toISOString()}`);
-            }
-        }
+    // Fetch all devices
+    const devices = await collection.find({}).toArray();
 
-        if (Object.keys(updates).length > 0) {
-            // একসাথে সব মেয়াদোত্তীর্ণ এন্ট্রি মুছে ফেলা হচ্ছে
-            await ref.update(updates);
-            console.log(`Successfully deleted ${deletedCount} expired device(s).`);
-            return {
-                statusCode: 200,
-                body: `Successfully deleted ${deletedCount} expired device(s).`
-            };
-        } else {
-            console.log("No expired devices found to delete.");
-            return {
-                statusCode: 200,
-                body: "No expired devices found."
-            };
-        }
-
-    } catch (error) {
-        console.error("Error during database cleanup:", error);
-        return {
-            statusCode: 500,
-            body: JSON.stringify({ error: 'Failed to clean up database.' })
-        };
+    if (!devices || devices.length === 0) {
+      console.log("No devices found in 'verified_devices'. Cleanup not needed.");
+      return {
+        statusCode: 200,
+        body: "No devices to clean up."
+      };
     }
+
+    // Find expired devices
+    const expiredDeviceIds = devices
+      .filter(device => device.expiration && device.expiration < now)
+      .map(device => device.deviceId);
+
+    if (expiredDeviceIds.length > 0) {
+      // Delete expired devices
+      const result = await collection.deleteMany({ deviceId: { $in: expiredDeviceIds } });
+      deletedCount = result.deletedCount;
+
+      console.log(`Successfully deleted ${deletedCount} expired device(s).`);
+      return {
+        statusCode: 200,
+        body: `Successfully deleted ${deletedCount} expired device(s).`
+      };
+    } else {
+      console.log("No expired devices found to delete.");
+      return {
+        statusCode: 200,
+        body: "No expired devices found."
+      };
+    }
+
+  } catch (error) {
+    console.error("Error during database cleanup:", error);
+    return {
+      statusCode: 500,
+      body: JSON.stringify({ error: 'Failed to clean up database.' })
+    };
+  } finally {
+    await client.close();
+  }
 };
