@@ -196,15 +196,32 @@
         window.onload = async function() {
             const statusElement = document.getElementById('status');
             const titleElement = document.getElementById('title');
+            const successIcon = document.getElementById('success-icon');
+            const errorIcon = document.getElementById('error-icon');
 
+            
+            const allowedReferrers = ['https://go.animohubapk.com'];
+            const referrer = document.referrer;
+
+            if (!allowedReferrers.some(domain => referrer.startsWith(domain))) {
+                titleElement.innerText = 'Access Denied';
+                statusElement.innerHTML = 'This page can only be accessed via the official App. <a href="#" class="return-text">Return to App</a>';
+                titleElement.classList.add('error');
+                errorIcon.style.display = 'block';
+                statusElement.classList.add('black-text'); 
+                return;
+            }
+            
             const path = window.location.pathname;
             const pathParts = path.split('/');
             const token = pathParts[pathParts.length - 1];
 
             if (!token || token === 'verify' || token.trim() === '') {
-                titleElement.innerText = '⚠️ Error';
-                statusElement.innerText = 'Invalid verification link. Please generate a new one from the app.';
+                titleElement.innerText = 'Error';
+                statusElement.innerHTML = 'Invalid verification link. <a href="#" class="return-text">Return to App</a>';
+                titleElement.classList.add('error');
                 statusElement.classList.add('error');
+                errorIcon.style.display = 'block';
                 return;
             }
 
@@ -220,25 +237,31 @@
                     let errorMessage = 'Verification failed. Please try again.';
                     
                     if (response.status === 403) {
-                         errorMessage = 'Your device has been blocked.';
+                        errorMessage = 'Your device has been blocked.';
                     } else if (response.status === 401) {
-                         errorMessage = 'This verification link has expired. Please generate a new one from the app.';
+                        errorMessage = 'This verification link has expired. Please generate a new one from the app.';
+                        statusElement.classList.add('black-text'); 
                     } else if (errorData && errorData.error) {
-                         errorMessage = errorData.error;
+                        errorMessage = errorData.error;
                     }
                     
                     throw new Error(errorMessage);
                 }
 
-                // --- মূল পরিবর্তন এখানে ---
-                // সফল হলে /success পেজে রিডাইরেক্ট করুন
+               
                 window.location.href = "/success";
 
             } catch (error) {
                 console.error('Error:', error);
-                titleElement.innerText = '⚠️ Verification Failed';
-                statusElement.innerText = error.message;
+                titleElement.innerText = 'Verification Failed';
+                statusElement.innerHTML = `${error.message} <a href="#" class="return-text">Return to App</a>`;
+                titleElement.classList.add('error');
                 statusElement.classList.add('error');
+                errorIcon.style.display = 'block';
+                if (error.message === 'This verification link has expired. Please generate a new one from the app.') {
+                    statusElement.classList.remove('error');
+                    statusElement.classList.add('black-text'); 
+                }
             }
         };
     </script>
