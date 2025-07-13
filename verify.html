@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Verification</title>
     <style>
-        /* Global styles */
+        /* Your existing CSS remains unchanged */
         body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
             display: flex;
@@ -13,13 +13,11 @@
             align-items: center;
             min-height: 100vh;
             margin: 0;
-            background: linear-gradient(135deg, #1e3a8a, #60a5fa); /* Rich blue gradient */
+            background: linear-gradient(135deg, #1e3a8a, #60a5fa);
             text-align: center;
             padding: 20px;
             overflow: hidden;
         }
-
-        /* Container styles */
         .container {
             background-color: rgba(255, 255, 255, 0.97);
             padding: 40px 60px;
@@ -31,17 +29,14 @@
             overflow: hidden;
             border: 1px solid rgba(255, 255, 255, 0.2);
         }
-
-        /* Icon styles */
         .status-icon {
             width: 80px;
             height: 80px;
             margin: 0 auto 20px;
             animation: iconPop 0.6s ease-in-out;
             filter: drop-shadow(0 0 15px rgba(0, 0, 0, 0.3));
-            display: none; /* Hidden by default, shown via JS */
+            display: none;
         }
-
         .status-icon svg {
             width: 100%;
             height: 100%;
@@ -50,33 +45,25 @@
             stroke-linecap: round;
             stroke-linejoin: round;
         }
-
         .success-icon svg {
-            stroke: #22c55e; /* Green for success */
+            stroke: #22c55e;
         }
-
         .error-icon svg {
-            stroke: #dc3545; /* Red for error */
+            stroke: #dc3545;
         }
-
-        /* Heading styles */
         h1 {
             font-size: 30px;
             margin: 10px 0;
             font-weight: 700;
             letter-spacing: 0.5px;
-            color: #1e3a8a; /* Default dark blue */
+            color: #1e3a8a;
         }
-
         .success {
-            color: #22c55e; /* Green for success */
+            color: #22c55e;
         }
-
         .error {
-            color: #dc3545; /* Red for error */
+            color: #dc3545;
         }
-
-        /* Paragraph styles */
         p {
             color: #4b5563;
             font-size: 18px;
@@ -84,28 +71,21 @@
             margin: 0 0 20px;
             font-weight: 500;
         }
-
-        /* Custom black text for specific messages */
         .black-text {
-            color: #000000 !important; /* Black color for specific message */
+            color: #000000 !important;
         }
-
-        /* Return text styles */
         .return-text {
             display: inline-block;
             color: #22c55e;
             font-size: 16px;
-            font-weight: 700; /* Bold text */
+            font-weight: 700;
             text-decoration: none;
             letter-spacing: 0.5px;
             transition: color 0.2s;
         }
-
         .return-text:hover {
-            color: #16a34a; /* Darker green on hover */
+            color: #16a34a;
         }
-
-        /* Background decoration */
         .container::before {
             content: '';
             position: absolute;
@@ -117,8 +97,6 @@
             z-index: -1;
             animation: rotate 15s linear infinite;
         }
-
-        /* Animations */
         @keyframes fadeIn {
             0% {
                 opacity: 0;
@@ -129,7 +107,6 @@
                 transform: translateY(0);
             }
         }
-
         @keyframes iconPop {
             0% {
                 transform: scale(0.5);
@@ -143,7 +120,6 @@
                 transform: scale(1);
             }
         }
-
         @keyframes rotate {
             0% {
                 transform: rotate(0deg);
@@ -152,8 +128,6 @@
                 transform: rotate(360deg);
             }
         }
-
-        /* Responsive design */
         @media (max-width: 600px) {
             .container {
                 padding: 30px;
@@ -199,19 +173,23 @@
             const successIcon = document.getElementById('success-icon');
             const errorIcon = document.getElementById('error-icon');
 
-            
-            const allowedReferrers = [''];
+            // Configuration: Enable or disable referrer protection
+            const urlParams = new URLSearchParams(window.location.search);
+            const referrerProtection = urlParams.get('referrerProtection') !== 'false'; // Defaults to true unless explicitly disabled
+
+            const allowedReferrers = ['https://animohubapk.com'];
             const referrer = document.referrer;
 
-            if (!allowedReferrers.some(domain => referrer.startsWith(domain))) {
+            // Check referrer only if referrerProtection is enabled
+            if (referrerProtection && !allowedReferrers.some(domain => referrer.startsWith(domain))) {
                 titleElement.innerText = 'Access Denied';
                 statusElement.innerHTML = 'This page can only be accessed via the official App. <a href="#" class="return-text">Return to App</a>';
                 titleElement.classList.add('error');
                 errorIcon.style.display = 'block';
-                statusElement.classList.add('black-text'); 
+                statusElement.classList.add('black-text');
                 return;
             }
-            
+
             const path = window.location.pathname;
             const pathParts = path.split('/');
             const token = pathParts[pathParts.length - 1];
@@ -235,20 +213,19 @@
                 if (!response.ok) {
                     const errorData = await response.json().catch(() => ({ error: 'An unknown error occurred.' }));
                     let errorMessage = 'Verification failed. Please try again.';
-                    
+
                     if (response.status === 403) {
                         errorMessage = 'Your device has been blocked.';
                     } else if (response.status === 401) {
                         errorMessage = 'This verification link has expired. Please generate a new one from the app.';
-                        statusElement.classList.add('black-text'); 
+                        statusElement.classList.add('black-text');
                     } else if (errorData && errorData.error) {
                         errorMessage = errorData.error;
                     }
-                    
+
                     throw new Error(errorMessage);
                 }
 
-               
                 window.location.href = "/success";
 
             } catch (error) {
@@ -260,7 +237,7 @@
                 errorIcon.style.display = 'block';
                 if (error.message === 'This verification link has expired. Please generate a new one from the app.') {
                     statusElement.classList.remove('error');
-                    statusElement.classList.add('black-text'); 
+                    statusElement.classList.add('black-text');
                 }
             }
         };
