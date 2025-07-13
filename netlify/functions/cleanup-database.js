@@ -3,7 +3,7 @@ const admin = require('firebase-admin');
 const fetch = require('node-fetch');
 
 // আপনার GitHub কনফিগারেশন URL
-const CONFIG_URL = "https://raw.githubusercontent.com/YaminDeveloper/AdsShortJson/refs/heads/main/config.json";
+const CONFIG_URL = "https://animohubapk.com/api/config.json";
 
 // Firebase Admin SDK ইনিশিয়ালাইজেশন
 try {
