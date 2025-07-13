@@ -1,10 +1,9 @@
 const jwt = require('jsonwebtoken');
 
-
-const JWT_SECRET = process.env.JWT_SECRET;
+const JWT_SECRET = process.env.JWT_SECRET || 'D9f$G&hLp@zsWc!z%C*F-aNdRgUjX';
 
 exports.handler = async function(event) {
-    
+   
     const headers = {
         'Access-Control-Allow-Origin': '*',
         'Access-Control-Allow-Headers': 'Content-Type',
@@ -13,36 +12,41 @@ exports.handler = async function(event) {
 
     
     if (event.httpMethod === 'OPTIONS') {
-        return { statusCode: 204, headers, body: '' };
+        return {
+            statusCode: 204,
+            headers,
+            body: ''
+        };
     }
-    
-    
+
     if (event.httpMethod !== 'POST') {
-        return { statusCode: 405, headers, body: 'Method Not Allowed' };
+        return {
+            statusCode: 405,
+            headers,
+            body: 'Method Not Allowed'
+        };
     }
 
     try {
-        
-        if (!JWT_SECRET) {
-            console.error('Server configuration error: JWT_SECRET is not set.');
-            return { statusCode: 500, headers, body: JSON.stringify({ error: 'Server configuration error.' }) };
-        }
+        const { deviceId, verification_token } = JSON.parse(event.body);
 
         
-        const { deviceId } = JSON.parse(event.body);
-
-        
-        if (!deviceId) {
-            return { statusCode: 400, headers, body: JSON.stringify({ error: 'Device ID is required.' }) };
+        if (!deviceId || !verification_token) {
+            return {
+                statusCode: 400,
+                headers,
+                body: JSON.stringify({ error: 'Device ID and verification token are required.' })
+            };
         }
 
        
-        const token = jwt.sign(
-            { deviceId: deviceId },
-            JWT_SECRET
+        const token = jwt.sign({
+                deviceId: deviceId,
+                verification_token: verification_token
+            },
+            JWT_SECRET, { expiresIn: '10m' }
         );
 
-        
         return {
             statusCode: 200,
             headers,
@@ -50,12 +54,10 @@ exports.handler = async function(event) {
         };
 
     } catch (error) {
-        
-        console.error("Token Generation Error:", error.message);
         return {
             statusCode: 500,
             headers,
-            body: JSON.stringify({ error: 'An internal server error occurred.' })
+            body: JSON.stringify({ error: error.message })
         };
     }
 };
