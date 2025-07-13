@@ -2,8 +2,10 @@ const jwt = require('jsonwebtoken');
 const admin = require('firebase-admin');
 const fetch = require('node-fetch');
 
+// রিমোট কনফিগারেশন ফাইলের URL
 const CONFIG_URL = "https://animohubapk.com/api/config.json";
 
+// Firebase Admin SDK ইনিশিয়ালাইজেশন (সবচেয়ে নিরাপদ পদ্ধতি ব্যবহার করে)
 try {
     const serviceAccountJson = Buffer.from(process.env.FIREBASE_SERVICE_ACCOUNT_BASE64, 'base64').toString('utf8');
     const serviceAccount = JSON.parse(serviceAccountJson);
@@ -18,8 +20,9 @@ try {
     console.error('Firebase Admin Initialization Error:', e);
 }
 
+// এই ফাংশনটি ভেরিফিকেশন টোকেন যাচাই করে এবং সফল হলে Firebase এ ডেটা আপডেট করে
 exports.handler = async (event) => {
-   
+    // CORS হেডার এবং HTTP মেথড চেক
     const headers = {
         'Access-Control-Allow-Origin': '*',
         'Access-Control-Allow-Headers': 'Content-Type',
@@ -33,12 +36,12 @@ exports.handler = async (event) => {
     }
 
     try {
-       
+        // --- ধাপ ১: রিমোট কনফিগারেশন ফাইল থেকে ডেটা লোড করা ---
         const configResponse = await fetch(CONFIG_URL);
         if (!configResponse.ok) throw new Error('Failed to fetch remote config');
         const config = await configResponse.json();
 
-       
+        // --- ধাপ ২: JWT টোকেন ভেরিফাই করা ---
         const { token } = JSON.parse(event.body);
         if (!token) {
             return { statusCode: 400, headers, body: JSON.stringify({ error: 'Token is required' }) };
@@ -49,30 +52,26 @@ exports.handler = async (event) => {
             throw new Error('Server configuration error: JWT_SECRET is not set.');
         }
 
-      
         const decoded = jwt.verify(token, JWT_SECRET);
-        
-       
-        const { deviceId } = decoded; 
-        
-       
-        if (!deviceId) {
-            return { statusCode: 400, headers, body: JSON.stringify({ error: 'Invalid token payload. Device ID is missing.' }) };
+        const { deviceId, verification_token } = decoded;
+        if (!deviceId || !verification_token) {
+            return { statusCode: 400, headers, body: JSON.stringify({ error: 'Invalid token payload' }) };
         }
         
-        
         const db = admin.database();
-       
+
+        // --- ধাপ ৩ (নতুন): ডিভাইসটি ব্লক করা আছে কিনা তা চেক করা ---
         const blockSnapshot = await db.ref(`blocked_devices/${deviceId}`).once('value');
         if (blockSnapshot.exists()) {
             console.log(`Verification blocked for device: ${deviceId}`);
             return {
-                statusCode: 403, 
+                statusCode: 403, // 403 Forbidden
                 body: JSON.stringify({ error: 'This device has been blocked.' })
             };
         }
 
-       
+        // --- ধাপ ৪: Firebase-এ ভেরিফিকেশন ডেটা সেট করা ---
+        // রিমোট কনফিগারেশন থেকে ভেরিফিকেশনের সময়কাল নির্ধারণ
         const verificationConfig = config.verification || {};
         const useHours = verificationConfig.useHours === true;
         let durationMillis;
@@ -87,13 +86,12 @@ exports.handler = async (event) => {
         
         const expirationTime = Date.now() + durationMillis;
 
-       
         await db.ref(`verified_devices/${deviceId}`).set({
             expiration: expirationTime,
-            isPermanent: false,
+            last_token: verification_token,
+            isPermanent: false, // নতুন ভেরিফিকেশন কখনো পার্মানেন্ট হবে না
             verified_at: new Date().toISOString()
         });
-        
 
         return {
             statusCode: 200,
@@ -102,10 +100,10 @@ exports.handler = async (event) => {
         };
 
     } catch (error) {
-       
+        // --- নতুন: আরও ভালো এরর হ্যান্ডলিং ---
         if (error.name === 'JsonWebTokenError' || error.name === 'TokenExpiredError') {
             return { 
-                statusCode: 401, 
+                statusCode: 401, // 401 Unauthorized
                 body: JSON.stringify({ error: 'Invalid or expired token.' }) 
             };
         }
@@ -114,7 +112,7 @@ exports.handler = async (event) => {
         return {
             statusCode: 500,
             headers,
-            body: JSON.stringify({ error: 'An internal server error occurred. Please contact support.' })
+            body: JSON.stringify({ error: error.message })
         };
     }
 };
