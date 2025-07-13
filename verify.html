@@ -199,7 +199,7 @@
             const successIcon = document.getElementById('success-icon');
             const errorIcon = document.getElementById('error-icon');
 
-           
+            
             const allowedReferrers = ['https://go.animohubapk.com'];
             const referrer = document.referrer;
 
@@ -212,7 +212,6 @@
                 return;
             }
             
-
             const path = window.location.pathname;
             const pathParts = path.split('/');
             const token = pathParts[pathParts.length - 1];
@@ -249,7 +248,7 @@
                     throw new Error(errorMessage);
                 }
 
-                
+               
                 window.location.href = "/success";
 
             } catch (error) {
