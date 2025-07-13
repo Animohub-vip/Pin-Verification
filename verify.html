@@ -1,269 +1,269 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Verification</title>
-    <style>
-        /* Global styles */
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-            margin: 0;
-            background: linear-gradient(135deg, #1e3a8a, #60a5fa); /* Rich blue gradient */
-            text-align: center;
-            padding: 20px;
-            overflow: hidden;
-        }
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Verification</title>
+    <style>
+        /* Global styles */
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            background: linear-gradient(135deg, #1e3a8a, #60a5fa); /* Rich blue gradient */
+            text-align: center;
+            padding: 20px;
+            overflow: hidden;
+        }
 
-        /* Container styles */
-        .container {
-            background-color: rgba(255, 255, 255, 0.97);
-            padding: 40px 60px;
-            border-radius: 20px;
-            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.25);
-            max-width: 500px;
-            animation: fadeIn 0.8s ease-out;
-            position: relative;
-            overflow: hidden;
-            border: 1px solid rgba(255, 255, 255, 0.2);
-        }
+        /* Container styles */
+        .container {
+            background-color: rgba(255, 255, 255, 0.97);
+            padding: 40px 60px;
+            border-radius: 20px;
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.25);
+            max-width: 500px;
+            animation: fadeIn 0.8s ease-out;
+            position: relative;
+            overflow: hidden;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
 
-        /* Icon styles */
-        .status-icon {
-            width: 80px;
-            height: 80px;
-            margin: 0 auto 20px;
-            animation: iconPop 0.6s ease-in-out;
-            filter: drop-shadow(0 0 15px rgba(0, 0, 0, 0.3));
-            display: none; /* Hidden by default, shown via JS */
-        }
+        /* Icon styles */
+        .status-icon {
+            width: 80px;
+            height: 80px;
+            margin: 0 auto 20px;
+            animation: iconPop 0.6s ease-in-out;
+            filter: drop-shadow(0 0 15px rgba(0, 0, 0, 0.3));
+            display: none; /* Hidden by default, shown via JS */
+        }
 
-        .status-icon svg {
-            width: 100%;
-            height: 100%;
-            fill: none;
-            stroke-width: 6;
-            stroke-linecap: round;
-            stroke-linejoin: round;
-        }
+        .status-icon svg {
+            width: 100%;
+            height: 100%;
+            fill: none;
+            stroke-width: 6;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+        }
 
-        .success-icon svg {
-            stroke: #22c55e; /* Green for success */
-        }
+        .success-icon svg {
+            stroke: #22c55e; /* Green for success */
+        }
 
-        .error-icon svg {
-            stroke: #dc3545; /* Red for error */
-        }
+        .error-icon svg {
+            stroke: #dc3545; /* Red for error */
+        }
 
-        /* Heading styles */
-        h1 {
-            font-size: 30px;
-            margin: 10px 0;
-            font-weight: 700;
-            letter-spacing: 0.5px;
-            color: #1e3a8a; /* Default dark blue */
-        }
+        /* Heading styles */
+        h1 {
+            font-size: 30px;
+            margin: 10px 0;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+            color: #1e3a8a; /* Default dark blue */
+        }
 
-        .success {
-            color: #22c55e; /* Green for success */
-        }
+        .success {
+            color: #22c55e; /* Green for success */
+        }
 
-        .error {
-            color: #dc3545; /* Red for error */
-        }
+        .error {
+            color: #dc3545; /* Red for error */
+        }
 
-        /* Paragraph styles */
-        p {
-            color: #4b5563;
-            font-size: 18px;
-            line-height: 1.5;
-            margin: 0 0 20px;
-            font-weight: 500;
-        }
+        /* Paragraph styles */
+        p {
+            color: #4b5563;
+            font-size: 18px;
+            line-height: 1.5;
+            margin: 0 0 20px;
+            font-weight: 500;
+        }
 
-        /* Custom black text for specific messages */
-        .black-text {
-            color: #000000 !important; /* Black color for specific message */
-        }
+        /* Custom black text for specific messages */
+        .black-text {
+            color: #000000 !important; /* Black color for specific message */
+        }
 
-        /* Return text styles */
-        .return-text {
-            display: inline-block;
-            color: #22c55e;
-            font-size: 16px;
-            font-weight: 700; /* Bold text */
-            text-decoration: none;
-            letter-spacing: 0.5px;
-            transition: color 0.2s;
-        }
+        /* Return text styles */
+        .return-text {
+            display: inline-block;
+            color: #22c55e;
+            font-size: 16px;
+            font-weight: 700; /* Bold text */
+            text-decoration: none;
+            letter-spacing: 0.5px;
+            transition: color 0.2s;
+        }
 
-        .return-text:hover {
-            color: #16a34a; /* Darker green on hover */
-        }
+        .return-text:hover {
+            color: #16a34a; /* Darker green on hover */
+        }
 
-        /* Background decoration */
-        .container::before {
-            content: '';
-            position: absolute;
-            top: -50%;
-            left: -50%;
-            width: 200%;
-            height: 200%;
-            background: radial-gradient(circle, rgba(255, 255, 255, 0.15), transparent);
-            z-index: -1;
-            animation: rotate 15s linear infinite;
-        }
+        /* Background decoration */
+        .container::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255, 255, 255, 0.15), transparent);
+            z-index: -1;
+            animation: rotate 15s linear infinite;
+        }
 
-        /* Animations */
-        @keyframes fadeIn {
-            0% {
-                opacity: 0;
-                transform: translateY(20px);
-            }
-            100% {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
+        /* Animations */
+        @keyframes fadeIn {
+            0% {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            100% {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
 
-        @keyframes iconPop {
-            0% {
-                transform: scale(0.5);
-                opacity: 0;
-            }
-            50% {
-                transform: scale(1.2);
-                opacity: 1;
-            }
-            100% {
-                transform: scale(1);
-            }
-        }
+        @keyframes iconPop {
+            0% {
+                transform: scale(0.5);
+                opacity: 0;
+            }
+            50% {
+                transform: scale(1.2);
+                opacity: 1;
+            }
+            100% {
+                transform: scale(1);
+            }
+        }
 
-        @keyframes rotate {
-            0% {
-                transform: rotate(0deg);
-            }
-            100% {
-                transform: rotate(360deg);
-            }
-        }
+        @keyframes rotate {
+            0% {
+                transform: rotate(0deg);
+            }
+            100% {
+                transform: rotate(360deg);
+            }
+        }
 
-        /* Responsive design */
-        @media (max-width: 600px) {
-            .container {
-                padding: 30px;
-                margin: 20px;
-            }
-            h1 {
-                font-size: 26px;
-            }
-            p {
-                font-size: 16px;
-            }
-            .status-icon {
-                width: 60px;
-                height: 60px;
-            }
-            .return-text {
-                font-size: 14px;
-            }
-        }
-    </style>
+        /* Responsive design */
+        @media (max-width: 600px) {
+            .container {
+                padding: 30px;
+                margin: 20px;
+            }
+            h1 {
+                font-size: 26px;
+            }
+            p {
+                font-size: 16px;
+            }
+            .status-icon {
+                width: 60px;
+                height: 60px;
+            }
+            .return-text {
+                font-size: 14px;
+            }
+        }
+    </style>
 </head>
 <body>
-    <div class="container">
-        <div class="status-icon success-icon" id="success-icon">
-            <svg viewBox="0 0 24 24">
-                <polyline points="5 12 9 16 19 6" />
-            </svg>
-        </div>
-        <div class="status-icon error-icon" id="error-icon">
-            <svg viewBox="0 0 24 24">
-                <line x1="6" y1="6" x2="18" y2="18" />
-                <line x1="6" y1="18" x2="18" y2="6" />
-            </svg>
-        </div>
-        <h1 id="title">Confirming Verification...</h1>
-        <p id="status">Please wait a moment...</p>
-    </div>
+    <div class="container">
+        <div class="status-icon success-icon" id="success-icon">
+            <svg viewBox="0 0 24 24">
+                <polyline points="5 12 9 16 19 6" />
+            </svg>
+        </div>
+        <div class="status-icon error-icon" id="error-icon">
+            <svg viewBox="0 0 24 24">
+                <line x1="6" y1="6" x2="18" y2="18" />
+                <line x1="6" y1="18" x2="18" y2="6" />
+            </svg>
+        </div>
+        <h1 id="title">Confirming Verification...</h1>
+        <p id="status">Please wait a moment...</p>
+    </div>
 
-    <script>
-        window.onload = async function() {
-            const statusElement = document.getElementById('status');
-            const titleElement = document.getElementById('title');
-            const successIcon = document.getElementById('success-icon');
-            const errorIcon = document.getElementById('error-icon');
+    <script>
+        window.onload = async function() {
+            const statusElement = document.getElementById('status');
+            const titleElement = document.getElementById('title');
+            const successIcon = document.getElementById('success-icon');
+            const errorIcon = document.getElementById('error-icon');
 
-            
-            const allowedReferrers = ['https://go.animohubapk.com'];
-            const referrer = document.referrer;
+            
+            const allowedReferrers = ['https://go.animohubapk.com'];
+            const referrer = document.referrer;
 
-            if (!allowedReferrers.some(domain => referrer.startsWith(domain))) {
-                titleElement.innerText = 'Access Denied';
-                statusElement.innerHTML = 'This page can only be accessed via the official App. <a href="#" class="return-text">Return to App</a>';
-                titleElement.classList.add('error');
-                errorIcon.style.display = 'block';
-                statusElement.classList.add('black-text'); 
-                return;
-            }
-            
-            const path = window.location.pathname;
-            const pathParts = path.split('/');
-            const token = pathParts[pathParts.length - 1];
+            if (!allowedReferrers.some(domain => referrer.startsWith(domain))) {
+                titleElement.innerText = 'Access Denied';
+                statusElement.innerHTML = 'This page can only be accessed via the official App. <a href="#" class="return-text">Return to App</a>';
+                titleElement.classList.add('error');
+                errorIcon.style.display = 'block';
+                statusElement.classList.add('black-text'); 
+                return;
+            }
+            
+            const path = window.location.pathname;
+            const pathParts = path.split('/');
+            const token = pathParts[pathParts.length - 1];
 
-            if (!token || token === 'verify' || token.trim() === '') {
-                titleElement.innerText = 'Error';
-                statusElement.innerHTML = 'Invalid verification link. <a href="#" class="return-text">Return to App</a>';
-                titleElement.classList.add('error');
-                statusElement.classList.add('error');
-                errorIcon.style.display = 'block';
-                return;
-            }
+            if (!token || token === 'verify' || token.trim() === '') {
+                titleElement.innerText = 'Error';
+                statusElement.innerHTML = 'Invalid verification link. <a href="#" class="return-text">Return to App</a>';
+                titleElement.classList.add('error');
+                statusElement.classList.add('error');
+                errorIcon.style.display = 'block';
+                return;
+            }
 
-            try {
-                const response = await fetch('/.netlify/functions/confirm-verification', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ token: token })
-                });
+            try {
+                const response = await fetch('/.netlify/functions/confirm-verification', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ token: token })
+                });
 
-                if (!response.ok) {
-                    const errorData = await response.json().catch(() => ({ error: 'An unknown error occurred.' }));
-                    let errorMessage = 'Verification failed. Please try again.';
-                    
-                    if (response.status === 403) {
-                        errorMessage = 'Your device has been blocked.';
-                    } else if (response.status === 401) {
-                        errorMessage = 'This verification link has expired. Please generate a new one from the app.';
-                        statusElement.classList.add('black-text'); 
-                    } else if (errorData && errorData.error) {
-                        errorMessage = errorData.error;
-                    }
-                    
-                    throw new Error(errorMessage);
-                }
+                if (!response.ok) {
+                    const errorData = await response.json().catch(() => ({ error: 'An unknown error occurred.' }));
+                    let errorMessage = 'Verification failed. Please try again.';
+                    
+                    if (response.status === 403) {
+                        errorMessage = 'Your device has been blocked.';
+                    } else if (response.status === 401) {
+                        errorMessage = 'This verification link has expired. Please generate a new one from the app.';
+                        statusElement.classList.add('black-text'); 
+                    } else if (errorData && errorData.error) {
+                        errorMessage = errorData.error;
+                    }
+                    
+                    throw new Error(errorMessage);
+                }
 
-               
-                window.location.href = "/success";
+               
+                window.location.href = "/success";
 
-            } catch (error) {
-                console.error('Error:', error);
-                titleElement.innerText = 'Verification Failed';
-                statusElement.innerHTML = `${error.message} <a href="#" class="return-text">Return to App</a>`;
-                titleElement.classList.add('error');
-                statusElement.classList.add('error');
-                errorIcon.style.display = 'block';
-                if (error.message === 'This verification link has expired. Please generate a new one from the app.') {
-                    statusElement.classList.remove('error');
-                    statusElement.classList.add('black-text'); 
-                }
-            }
-        };
-    </script>
+            } catch (error) {
+                console.error('Error:', error);
+                titleElement.innerText = 'Verification Failed';
+                statusElement.innerHTML = `${error.message} <a href="#" class="return-text">Return to App</a>`;
+                titleElement.classList.add('error');
+                statusElement.classList.add('error');
+                errorIcon.style.display = 'block';
+                if (error.message === 'This verification link has expired. Please generate a new one from the app.') {
+                    statusElement.classList.remove('error');
+                    statusElement.classList.add('black-text'); 
+                }
+            }
+        };
+    </script>
 </body>
 </html>
